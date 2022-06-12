@@ -1,0 +1,23 @@
+language: generic 
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t abevear/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true abevear/react-test npm test
+
+after_success:
+  - docker build -t abevear/multi-client ./client
+  - docker build -t abevear/multi-nginx ./nginx
+  - docker build -t abevear/multi-server ./server
+  - docker build -t abevear/multi-worker ./worker
+  #Login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take images and push to docker hub
+  - docker push abevear/multi-client
+  - docker push abevear/multi-nginx
+  - docker push abevear/multi-server
+  - docker push abevear/multi-worker
